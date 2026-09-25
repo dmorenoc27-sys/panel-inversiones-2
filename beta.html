@@ -1,0 +1,491 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://cdnjs.cloudflare.com https://*.tile.openstreetmap.org; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
+<title>Panel de Inversiones</title>
+<script>/* Escudo anti-iframe: solo mismo host */try{if(window.top!==window.self&&window.top.location.host!==window.self.location.host){window.top.location=window.self.location;}}catch(_){document.documentElement.style.display='none';}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--ink:#14213D;--ink2:#3C4A66;--mut:#5B6B7F;--card:#fff;--line:#DCE3EE;
+--brand:#1565C0;--brand2:#1E88E5;--dark:#0D2B5E;--soft:#E8F1FB;
+--p1:#1565C0;--p2:#00897B;--otr:#C77700;--rojo:#B3261E;--verde:#2E7D32;--amb:#C77700;
+--r:16px;--sh:0 1px 2px rgba(20,33,61,.05),0 12px 32px -16px rgba(20,33,61,.28)}
+*{box-sizing:border-box;margin:0}html,body{height:100%}
+body{font:13px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);overflow:hidden;
+background:radial-gradient(1100px 520px at 78% -80px,#DCE9F8 0%,transparent 60%),radial-gradient(900px 500px at -100px 110%,#E3ECF7 0%,transparent 55%),#EEF2F8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button{font:inherit}
+#splash{position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#071A3D,#0D2B5E 60%,#1565C0);display:grid;place-items:center}
+#splash.go{animation:byebye .5s forwards}@keyframes byebye{to{opacity:0;visibility:hidden}}
+#splash .in{text-align:center;color:#fff;animation:rise .8s cubic-bezier(.2,.7,.2,1);max-width:560px;padding:0 20px}
+@keyframes rise{from{opacity:0;transform:translateY(26px) scale(.96)}}
+#splash .mono{width:76px;height:76px;border-radius:22px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:34px;font-weight:900;margin:0 auto 14px;letter-spacing:-1px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+#splash h2{font-size:26px;font-weight:800;letter-spacing:-.4px}
+#splash p{font-size:11.5px;color:#BFD3F0;font-weight:700;letter-spacing:2px;margin-top:6px}
+#splash .st{font-size:10px;color:#9DB6DC;font-weight:700;margin-top:20px}
+#splash .nof{font-size:10px;color:#BFD3F0;margin-top:26px;line-height:1.5;border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:8px 12px}
+.app{height:100dvh;display:grid;grid-template-columns:82px 1fr 400px;grid-template-rows:64px 1fr 60px;gap:12px;padding:12px 14px;max-width:1800px;margin:0 auto}
+.up{animation:up .5s cubic-bezier(.2,.7,.2,1) both}@keyframes up{from{opacity:0;transform:translateY(14px)}}
+.rail{grid-row:1/4;background:linear-gradient(180deg,#071A3D,#0D2B5E);border-radius:22px;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:8px;box-shadow:var(--sh)}
+.rail .logo{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:20px;font-weight:900;color:#fff;margin-bottom:12px;letter-spacing:-1px}
+.mode{width:64px;padding:9px 0 7px;border-radius:15px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#BFD3F0;cursor:pointer;transition:.18s;border:0;background:transparent}
+.mode span{font-size:20px;transition:.18s}.mode i{font-style:normal;font-size:7.5px;font-weight:800;letter-spacing:.3px;text-align:center;line-height:1.25}
+.mode:hover{background:rgba(255,255,255,.10);color:#fff}.mode:hover span{transform:scale(1.15)}
+.mode.on{background:#fff;color:var(--brand);box-shadow:0 6px 16px rgba(0,0,0,.28)}
+.rail .fill{flex:1}.rail .mini{color:#9DB6DC;font-size:8px;font-weight:700;text-align:center;line-height:1.5;padding:0 4px}
+.top{grid-column:2/4;display:flex;align-items:center;gap:14px;min-width:0}
+.top h1{font-size:17px;font-weight:800;letter-spacing:-.3px;white-space:nowrap}
+.top h1 small{display:block;font-size:9.5px;color:var(--mut);font-weight:700;letter-spacing:1.2px}
+.search{flex:1;position:relative;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 16px;box-shadow:var(--sh);min-width:0}
+.search input{flex:1;border:0;outline:0;font:inherit;font-size:13.5px;background:transparent;min-width:0}
+.kbd{font-size:9px;font-weight:800;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:2px 7px;background:#fff;white-space:nowrap}
+.sug{position:absolute;top:46px;left:8px;right:8px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px -20px rgba(20,33,61,.4);padding:6px;display:none;z-index:60;max-height:340px;overflow:auto}
+.sug.show{display:block;animation:up .18s both}
+.sug .it{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:11px;cursor:pointer;font-size:12px;color:var(--ink2)}
+.sug .it b{color:var(--ink)}.sug .it:hover,.sug .it.act{background:var(--soft)}
+.sug .k{font-size:8.5px;font-weight:800;border-radius:6px;padding:2px 7px;color:#fff;flex:none}
+.corte{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.82);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:11px;font-weight:700;color:var(--ink2);box-shadow:var(--sh);white-space:nowrap}
+.corte b{color:var(--brand)}
+.pulse{width:8px;height:8px;border-radius:50%;background:#2E7D32;animation:pu 2s infinite}@keyframes pu{50%{box-shadow:0 0 0 7px #2E7D3215}}
+.stage{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);min-height:0;overflow:hidden}
+#mapa{position:absolute;inset:0;z-index:1}
+.leaflet-container{font:inherit;background:#E9EEF5}
+.flota{position:absolute;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:13px;box-shadow:var(--sh);z-index:500}
+.titulo{left:16px;top:14px;padding:9px 16px}
+.titulo b{font-size:12.5px}.titulo small{display:block;font-size:9.5px;color:var(--mut);font-weight:700}
+.leyenda{left:16px;bottom:14px;padding:8px 14px;display:flex;gap:10px;align-items:center;font-size:9.5px;font-weight:700;color:var(--mut);flex-wrap:wrap}
+.leyenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.vista{position:absolute;inset:0;z-index:2;background:var(--card);display:none;flex-direction:column;min-height:0}
+.vista.show{display:flex}
+.vh{padding:14px 18px 10px;border-bottom:1px solid #EEF2F8;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vh .tt{font-size:15px;font-weight:800}.vh .ss{font-size:10px;color:var(--mut);font-weight:700}
+.vh .sp{flex:1}
+.vb{flex:1;min-height:0;overflow:auto;padding:14px 18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#FDFDFE;min-width:0}
+.card h3{font-size:11px;font-weight:800;color:var(--mut);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px}
+.card .cv{position:relative;height:230px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel .ph{padding:15px 18px 11px;border-bottom:1px solid #EEF2F8}
+.panel .tt{font-size:15px;font-weight:800;letter-spacing:-.2px}
+.panel .ss{font-size:10px;color:var(--mut);font-weight:700;margin-top:2px}
+.panel .body{flex:1;padding:13px 16px;display:flex;flex-direction:column;gap:9px;min-height:0;overflow:auto}
+.panel .body>*{animation:up .35s both}
+.stat{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:13px;padding:9px 13px;background:#FDFDFE}
+.stat .ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:16px;flex:none;background:var(--soft)}
+.stat b{font-size:15px;letter-spacing:-.3px;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat small{font-size:9px;color:var(--mut);font-weight:800;letter-spacing:.4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:9.5px;font-weight:800;border-radius:999px;padding:4px 11px;background:var(--soft);color:var(--brand);border:1px solid transparent;cursor:pointer}
+.chip.on{background:var(--brand);color:#fff}
+.chip.est-a{background:#E6F4EA;color:#1B5E20}.chip.est-c{background:#F1F3F4;color:#5B6B7F}
+.lista{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+.pitem{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:11px;padding:8px 11px;cursor:pointer;transition:.15s;background:#FDFDFE;text-align:left;width:100%}
+.pitem:hover{border-color:var(--brand2);background:var(--soft);transform:translateX(3px)}
+.pitem .sw{width:9px;height:9px;border-radius:3px;flex:none}
+.pitem b{font-size:11.5px}.pitem small{display:block;font-size:9px;color:var(--mut);font-weight:700}
+.pitem .est{margin-left:auto;font-size:9px;font-weight:800;flex:none;white-space:nowrap}
+.acciones{display:grid;gap:7px;margin-top:auto}
+.acciones button{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:#FAFBFD;border-radius:12px;padding:10px 14px;font-size:11.5px;font-weight:800;color:var(--ink2);cursor:pointer;transition:.16s;width:100%}
+.acciones button:hover{border-color:var(--brand2);color:var(--brand);background:var(--soft);transform:translateX(3px)}
+.acciones .cta{background:var(--brand);border-color:var(--brand);color:#fff}.acciones .cta:hover{background:var(--brand2);color:#fff}
+.hint{font-size:10.5px;color:var(--mut);font-weight:600;text-align:center}
+.ticker{grid-column:2/4;background:rgba(255,255,255,.88);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;padding:0 8px}
+.tk{display:flex;align-items:center;gap:10px;justify-content:center;border-right:1px solid #EEF2F8;padding:6px 4px;min-width:0}
+.tk:last-child{border-right:0}
+.tk b{font-size:14px;letter-spacing:-.3px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tk small{font-size:8.5px;font-weight:800;color:var(--mut);letter-spacing:.5px;line-height:1.25}
+table.t{width:100%;border-collapse:collapse;font-size:11.5px}
+table.t th{position:sticky;top:0;background:#F4F7FB;text-align:left;font-size:9.5px;letter-spacing:.5px;color:var(--mut);padding:8px 8px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+table.t td{padding:7px 8px;border-bottom:1px solid #EEF2F8;vertical-align:top}
+#tabla td:nth-child(2){min-width:280px}#tabla td:nth-child(2) small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}#tabla td:nth-child(3),#tabla td:nth-child(4),#tabla td:nth-child(5){white-space:nowrap}#tabla{min-width:1500px}
+table.t tr:hover td{background:var(--soft)}
+table.t td.n,table.t th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:7px;border-radius:4px;background:#E6EBF3;overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;background:var(--brand)}
+.tag{display:inline-block;font-size:9px;font-weight:800;border-radius:6px;padding:2px 7px;color:#fff}
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;font-size:11px;font-weight:800;color:var(--ink2);cursor:pointer}
+.btn:hover{border-color:var(--brand2);color:var(--brand);background:var(--soft)}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+.ficha .kv{display:grid;grid-template-columns:150px 1fr;gap:4px 10px;font-size:11.5px}
+.ficha .kv dt{color:var(--mut);font-weight:700}.ficha .kv dd{font-weight:600;word-break:break-word}
+.ficha .narr{white-space:pre-wrap;font-size:11.5px;line-height:1.5;color:var(--ink2);max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;background:#FAFBFD}
+.prog{display:grid;grid-template-columns:110px 1fr 70px;align-items:center;gap:8px;font-size:11px;margin:4px 0}
+.prog .bar{height:10px}
+.foot{font-size:9.5px;color:var(--mut);padding:6px 2px;line-height:1.4}
+.sr{position:absolute;left:-9999px}
+.mk{border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.leaflet-popup-content{font:12px/1.4 "Segoe UI",system-ui,sans-serif;margin:10px 12px}
+.leaflet-popup-content b{display:block;font-size:12px}.leaflet-popup-content small{color:var(--mut);font-weight:700}
+@media (max-width:1100px){.app{grid-template-columns:70px 1fr;grid-template-rows:64px 1fr auto 60px}.top{grid-column:2/3}.panel{grid-column:2/3;max-height:40vh}.ticker{grid-column:2/3;grid-template-columns:repeat(3,1fr)}.mode i{display:none}.grid2{grid-template-columns:1fr}}
+@media (max-width:700px){body{overflow:auto}.app{height:auto;grid-template-columns:1fr;grid-template-rows:auto;padding:8px}.rail{grid-row:auto;flex-direction:row;padding:6px;border-radius:14px}.rail .logo{margin:0 6px 0 0}.rail .fill,.rail .mini{display:none}.top{grid-column:1;flex-wrap:wrap}.top h1{white-space:normal}.stage{min-height:60vh;grid-column:1}.panel{grid-column:1;max-height:none}.ticker{grid-column:1;grid-template-columns:1fr 1fr}.corte{display:none}}
+@media print{.rail,.ticker,.search,.corte{display:none}body{overflow:visible}}
+</style></head><body>
+<div id="splash" role="status"><div class="in"><div class="mono">Pi</div><h2 id="sp-t">Panel de Inversiones</h2><p id="sp-s">SEGUIMIENTO DE INVERSIÓN PÚBLICA · PERÚ</p><div class="st" id="st">Cargando datos en vivo…</div>
+<div class="nof">Herramienta <b>no oficial</b> elaborada con información pública del MEF (Banco de Inversiones, Formato 12-B y Consulta Amigable). No representa a ninguna entidad del Estado.</div></div></div>
+
+<div class="app">
+  <nav class="rail up" aria-label="Modos del panel">
+    <div class="logo" aria-hidden="true">Pi</div>
+    <button class="mode on" id="m-mapa" onclick="ir('mapa')" aria-label="Panorama en el mapa"><span aria-hidden="true">🗺️</span><i>PANORAMA</i></button>
+    <button class="mode" id="m-cartera" onclick="ir('cartera')" aria-label="Cartera de inversiones"><span aria-hidden="true">🗂️</span><i>CARTERA</i></button>
+    <button class="mode" id="m-ejec" onclick="ir('ejec')" aria-label="Ejecución presupuestal"><span aria-hidden="true">📊</span><i>EJECUCIÓN<br>PRESUP.</i></button>
+    <button class="mode" id="m-ficha" onclick="ir('ficha')" aria-label="Ficha de la inversión seleccionada"><span aria-hidden="true">📄</span><i>FICHA</i></button>
+    <button class="mode" id="m-exp" onclick="ir('exp')" aria-label="Exportar"><span aria-hidden="true">📤</span><i>EXPORTAR</i></button>
+    <div class="fill"></div>
+    <div class="mini" id="rail-mini">PANEL<br>Pi</div>
+  </nav>
+
+  <header class="top up" style="animation-delay:.05s">
+    <h1 id="h1">Panel de Inversiones<small id="h1s">UNIDAD EJECUTORA · INFORMACIÓN PÚBLICA DEL MEF</small></h1>
+    <div class="search" role="search">
+      <span aria-hidden="true">🔎</span><input id="q" placeholder="Busca una inversión: CUI, nombre, departamento o programa…" autocomplete="off" aria-label="Buscar inversión"><span class="kbd" id="ncuis">…</span>
+      <div class="sug" id="sug" role="listbox"></div>
+    </div>
+    <div class="corte"><span class="pulse" aria-hidden="true"></span>Datos · Corte <b id="corte">…</b></div>
+  </header>
+
+  <main class="stage up" style="animation-delay:.1s" id="stage">
+    <div id="mapa" role="img" aria-label="Mapa de las inversiones de la cartera"></div>
+    <div class="flota titulo"><b id="map-t">Cartera</b><small id="subt">clic en un punto para explorar</small></div>
+    <div class="flota leyenda" id="leyenda"></div>
+
+    <section class="vista" id="v-cartera" aria-label="Cartera">
+      <div class="vh"><div><div class="tt">Cartera de inversiones</div><div class="ss" id="cart-ss"></div></div><div class="sp"></div>
+        <div class="chips" id="cart-filtros"></div></div>
+      <div class="vb" style="padding:0"><table class="t" id="tabla"><thead></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="vista" id="v-ejec" aria-label="Ejecución presupuestal">
+      <div class="vh"><div><div class="tt">Ejecución presupuestal</div><div class="ss" id="ejec-ss"></div></div><div class="sp"></div><div class="chips" id="ejec-anios"></div></div>
+      <div class="vb"><div class="grid2">
+        <div class="card" style="grid-column:1/3"><h3>Línea de vida de la unidad ejecutora · PIM vs devengado por año</h3><div class="cv" id="c-vida"><canvas id="ch-vida"></canvas></div></div>
+        <div class="card"><h3>Avance financiero acumulado por programa</h3><div class="cv"><canvas id="ch-prog"></canvas></div></div>
+        <div class="card"><h3>Ejecución del año por departamento</h3><div class="cv"><canvas id="ch-dep"></canvas></div></div>
+        <div class="card"><h3>Cartera por tipo de servicio</h3><div class="cv"><canvas id="ch-tipo"></canvas></div></div>
+        <div class="card"><h3>Ranking de ejecución del año (% devengado / PIM)</h3><div class="cv"><canvas id="ch-rank"></canvas></div></div>
+      </div></div>
+    </section>
+
+    <section class="vista ficha" id="v-ficha" aria-label="Ficha de la inversión">
+      <div class="vh"><div><div class="tt" id="f-tt">Ficha</div><div class="ss" id="f-ss">Elige una inversión en el mapa, la cartera o el buscador</div></div><div class="sp"></div>
+        <button class="btn" onclick="abrirSSI()" id="f-ssi" hidden>Ver ficha en el SSI ↗</button>
+        <button class="btn" onclick="abrirF12B()" id="f-f12b" hidden>Formato 12-B ↗</button></div>
+      <div class="vb" id="f-body"></div>
+    </section>
+
+    <section class="vista" id="v-exp" aria-label="Exportar">
+      <div class="vh"><div><div class="tt">Exportar</div><div class="ss">Archivos con montos exactos (2 decimales) y fecha de corte</div></div></div>
+      <div class="vb"><div class="grid2">
+        <div class="card"><h3>Excel · cartera completa</h3><p style="font-size:11.5px;color:var(--ink2);margin-bottom:10px">Hoja "Cartera" (una fila por inversión: programa, tipo, ubicación, costo, devengado acumulado, avances, PIM y devengado del año, estado) y hoja "Anual" (PIM / certificado / devengado / girado por año y CUI, 2013 → hoy).</p><button class="btn pri" onclick="exportarExcel()">Descargar Excel</button></div>
+        <div class="card"><h3>PowerPoint · resumen ejecutivo</h3><p style="font-size:11.5px;color:var(--ink2);margin-bottom:10px">Portada, KPIs de la cartera, ejecución del año por programa y tabla de inversiones con avance físico y financiero.</p><button class="btn pri" onclick="exportarPPT()">Descargar PPT</button></div>
+        <div class="card" style="grid-column:1/3"><h3>Fuentes y corte</h3><div id="exp-fuentes" style="font-size:11.5px;color:var(--ink2);line-height:1.6"></div></div>
+      </div></div>
+    </section>
+  </main>
+
+  <aside class="panel up" style="animation-delay:.15s" aria-label="Panel contextual">
+    <div class="ph"><div class="tt" id="p-tt"></div><div class="ss" id="p-ss"></div></div>
+    <div class="body" id="p-body"></div>
+  </aside>
+
+  <footer class="ticker up" style="animation-delay:.2s" aria-label="Indicadores">
+    <div class="tk"><span aria-hidden="true">🗂️</span><div><b id="k1">…</b><br><small>INVERSIONES<br>EN CARTERA</small></div></div>
+    <div class="tk"><span aria-hidden="true">🏗️</span><div><b id="k2">…</b><br><small>COSTO TOTAL<br>DE LA CARTERA</small></div></div>
+    <div class="tk"><span aria-hidden="true">📈</span><div><b id="k3">…</b><br><small>DEVENGADO<br>ACUMULADO</small></div></div>
+    <div class="tk"><span aria-hidden="true">💰</span><div><b id="k4">…</b><br><small id="k4l">PIM AÑO</small></div></div>
+    <div class="tk"><span aria-hidden="true">✅</span><div><b id="k5">…</b><br><small id="k5l">DEVENGADO AÑO</small></div></div>
+  </footer>
+</div>
+
+<script src="cartera.js"></script>
+<script>(function(){var s=document.createElement("script");s.src="Datos/datos_update.js?v="+Date.now();s.async=false;s.onerror=function(){window._datosActualizados=window._datosActualizados||{};};document.head.appendChild(s);})();</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+/* ═══════════ Panel de Inversiones — motor dirigido por datos (cartera.js + Datos/datos_update.js) ═══════════ */
+window.addEventListener('DOMContentLoaded',function(){
+'use strict';
+var C=window._cartera||{proyectos:[],hist:{},histOtros:{},programas:{},tipos:{},ue:{}};
+var U=window._datosActualizados||{};
+var ANIO=Number(U._anioActual||C._anioActual||new Date().getFullYear());
+var CORTE=(U._generado||C._generado||'').slice(0,16);
+var $=function(id){return document.getElementById(id);};
+var COL={P1:'#1565C0',P2:'#00897B',OTR:'#C77700'};
+var TIPO_ICO={UNIV:'🎓',IEST:'🏫',IESP:'📚',CETPRO:'🛠️',ESFA:'🎭',GEST:'🏛️',PREINV:'📝'};
+var ROOT_SSI='https://ofi5.mef.gob.pe/ssi/Ssi/Index?codigo=';
+var ROOT_F12B='https://ofi5.mef.gob.pe/invierteWS/Repseguim/ResumF12B?codigo=';
+
+/* ── formato: montos exactos con 2 decimales, siempre ── */
+function fmt(n){n=Number(n||0);return 'S/ '+n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtN(n){n=Number(n||0);return n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtM(n){n=Number(n||0);return (n/1e6).toLocaleString('es-PE',{minimumFractionDigits:1,maximumFractionDigits:1})+' M';}
+function pct(a,b){return b>0?Math.round(a/b*10000)/100:0;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fecha(s){if(!s)return '—';var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);return m?m[3]+'/'+m[2]+'/'+m[1]:s;}
+function cap(s){s=String(s||'');return s.toLowerCase().replace(/(^|\s|\/)(\S)/g,function(a,b,c){return b+c.toUpperCase();});}
+
+/* ── fusión cartera + datos vivos ── */
+var P=C.proyectos.map(function(p0){
+  var p=JSON.parse(JSON.stringify(p0)),c=p.cui;
+  if(U.avFisico&&U.avFisico[c]!=null)p.avFisico=U.avFisico[c];
+  if(U.avEjec&&U.avEjec[c]!=null)p.avFin=U.avEjec[c];
+  if(U.avFinUpdate&&U.avFinUpdate[c]!=null)p.avFin=U.avFinUpdate[c];
+  if(U.devAcumUpdate&&U.devAcumUpdate[c]!=null)p.devAcum=U.devAcumUpdate[c];
+  if(U.costoUpdate&&U.costoUpdate[c]!=null)p.costo=U.costoUpdate[c];
+  if(U.estadoInvUpdate&&U.estadoInvUpdate[c])p.estado=U.estadoInvUpdate[c];
+  if(U.situacionUpdate&&U.situacionUpdate[c])p.situActual=U.situacionUpdate[c];
+  if(U.fechasUpdate&&U.fechasUpdate[c]){p.fechaInicio=U.fechasUpdate[c].i;p.fechaFin=U.fechasUpdate[c].f;}
+  if(U.uepUpdate&&U.uepUpdate[c])p.uep=U.uepUpdate[c];
+  if(U.mensualUpdate&&U.mensualUpdate[c])p.mensual=U.mensualUpdate[c];
+  if(U.cuiYearFinUpdate&&U.cuiYearFinUpdate[c])p.anual=U.cuiYearFinUpdate[c];
+  /* serie anual: Consulta Amigable (hist) + año vigente en vivo (SSI) */
+  p.serie={};
+  Object.keys(C.hist||{}).forEach(function(a){var v=C.hist[a][c];if(v)p.serie[a]={pia:v[0],pim:v[1],cert:v[2],dev:v[3],gir:v[4]};});
+  var fa=U.finAnoUpdate&&U.finAnoUpdate[c];
+  if(fa&&String(fa.ano)===String(ANIO)){var s=p.serie[ANIO]||(p.serie[ANIO]={pia:0,pim:0,cert:0,dev:0,gir:0});if(fa.Dev!=null)s.dev=Number(fa.Dev);if(Number(fa.Cert)>0)s.cert=Number(fa.Cert);if(Number(fa.Gir)>0)s.gir=Number(fa.Gir);s.vivo=true;}
+  var y=p.serie[ANIO]||{pim:0,dev:0,cert:0,gir:0};
+  p.pimAnio=y.pim||0;p.devAnio=y.dev||0;p.certAnio=y.cert||0;p.girAnio=y.gir||0;
+  p.ejecAnio=pct(p.devAnio,p.pimAnio);
+  if(p.avFin==null||p.avFin<0)p.avFin=pct(p.devAcum,p.costo);
+  if(p.avFisico!=null&&p.avFisico<0)p.avFisico=null;
+  p.activo=!/CERRAD|DESACTIV/i.test(p.estado||'');
+  return p;
+});
+var byCui={};P.forEach(function(p){byCui[p.cui]=p;});
+var progNombre=function(k){return (C.programas[k]&&C.programas[k].nombre)||'Otros';};
+var tipoNombre=function(k){return C.tipos[k]||k;};
+
+/* ── KPIs ── */
+var K={n:P.length,nAct:P.filter(function(p){return p.activo;}).length,
+  costo:P.reduce(function(s,p){return s+(p.costo||0);},0),
+  devAcum:P.reduce(function(s,p){return s+(p.devAcum||0);},0),
+  pim:P.reduce(function(s,p){return s+p.pimAnio;},0),
+  dev:P.reduce(function(s,p){return s+p.devAnio;},0)};
+K.avFin=pct(K.devAcum,K.costo);K.ejec=pct(K.dev,K.pim);
+$('k1').textContent=K.n+' ('+K.nAct+' activas)';
+$('k2').textContent=fmt(K.costo);$('k3').textContent=fmt(K.devAcum)+' · '+fmtN(K.avFin)+' %';
+$('k4').textContent=fmt(K.pim);$('k4l').textContent='PIM '+ANIO;
+$('k5').textContent=fmt(K.dev)+' · '+fmtN(K.ejec)+' %';$('k5l').textContent='DEVENGADO '+ANIO;
+$('corte').textContent=CORTE||'—';$('ncuis').textContent=P.length+' CUI';
+var marca=(C.ue&&C.ue.marca)||'Panel de Inversiones';
+$('h1').firstChild.textContent=marca;$('sp-t').textContent=marca;document.title=marca;
+$('h1s').textContent='UNIDAD EJECUTORA '+(C.ue&&C.ue.ejecutora?C.ue.ejecutora:'')+' · SECTOR EDUCACIÓN · INFORMACIÓN PÚBLICA DEL MEF';
+$('rail-mini').innerHTML='PANEL<br>Pi<br><span style="color:#F9A825">v1</span>';
+
+/* ── navegación ── */
+var VISTA='mapa',SEL=null;
+window.ir=function(v){VISTA=v;['mapa','cartera','ejec','ficha','exp'].forEach(function(k){var b=$('m-'+k);if(b)b.classList.toggle('on',k===v);});
+  ['cartera','ejec','ficha','exp'].forEach(function(k){$('v-'+k).classList.toggle('show',k===v);});
+  document.querySelectorAll('#stage>.flota').forEach(function(f){f.style.display=(v==='mapa')?'':'none';});
+  if(v==='ejec')setTimeout(renderCharts,30);if(v==='cartera')renderTabla();if(v==='ficha')renderFicha();if(v==='exp')renderExp();
+  if(v==='mapa'&&MAP)setTimeout(function(){MAP.invalidateSize();},60);};
+
+/* ── mapa (Leaflet + OSM) ── */
+var MAP=null,MARK={};
+function initMapa(){
+  if(!window.L){$('mapa').innerHTML='<div class="hint" style="padding:40px">El mapa no pudo cargarse (sin acceso a cdnjs).</div>';return;}
+  MAP=L.map('mapa',{zoomControl:false,attributionControl:true,scrollWheelZoom:true}).setView([-9.4,-75.2],5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(MAP);L.control.zoom({position:'bottomright'}).addTo(MAP);
+  var maxC=Math.max.apply(null,P.map(function(p){return p.costo||0;}))||1;
+  P.forEach(function(p){if(p.lat==null||p.lng==null)return;
+    var r=6+Math.sqrt((p.costo||0)/maxC)*18;
+    var m=L.circleMarker([p.lat,p.lng],{radius:r,color:'#fff',weight:2,fillColor:COL[p.programa]||COL.OTR,fillOpacity:.85});
+    m.bindTooltip('<b>'+esc(p.corto)+'</b><br><small>'+esc(cap(p.dep))+' · '+esc(progNombre(p.programa))+'</small><br>Avance financiero '+fmtN(p.avFin)+' %'+(p.avFisico!=null?' · físico '+fmtN(p.avFisico)+' %':''),{direction:'top',offset:[0,-r]});
+    m.on('click',function(){seleccionar(p.cui);});m.addTo(MAP);MARK[p.cui]=m;});
+  var ley=$('leyenda');ley.innerHTML=Object.keys(C.programas).map(function(k){return '<span><i style="background:'+COL[k]+'"></i>'+esc(progNombre(k))+'</span>';}).join('')+'<span>· tamaño = costo</span>';
+  $('map-t').textContent='Cartera · '+P.length+' inversiones';
+}
+window.abrirSSI=function(){if(SEL)window.open(ROOT_SSI+SEL,'_blank','noopener');};
+window.abrirF12B=function(){if(SEL)window.open(ROOT_F12B+SEL,'_blank','noopener');};
+
+/* ── panel contextual ── */
+function tagProg(k){return '<span class="tag" style="background:'+(COL[k]||COL.OTR)+'">'+esc(progNombre(k))+'</span>';}
+function chipEst(p){return p.activo?'<span class="chip est-a">Activa</span>':'<span class="chip est-c">Cerrada</span>';}
+function panelResumen(){
+  $('p-tt').textContent='Resumen de la cartera';$('p-ss').textContent='UE '+(C.ue.ejecutora||'')+' · corte '+(CORTE||'—');
+  var h='';
+  h+='<div class="stat"><div class="ic">🏗️</div><div><b>'+fmt(K.costo)+'</b><small>COSTO TOTAL · '+K.n+' INVERSIONES</small></div></div>';
+  h+='<div class="stat"><div class="ic">📈</div><div><b>'+fmt(K.devAcum)+'</b><small>DEVENGADO ACUMULADO · '+fmtN(K.avFin)+' % DEL COSTO</small></div></div>';
+  h+='<div class="stat"><div class="ic">💰</div><div><b>'+fmt(K.dev)+'</b><small>DEVENGADO '+ANIO+' · '+fmtN(K.ejec)+' % DEL PIM '+fmt(K.pim)+'</small></div></div>';
+  h+='<div class="chips">'+Object.keys(C.programas).map(function(k){var n=P.filter(function(p){return p.programa===k;}).length;return n?'<span class="chip" data-prog="'+k+'" style="background:'+COL[k]+'22;color:'+COL[k]+'">'+esc(progNombre(k))+' · '+n+'</span>':'';}).join('')+'</div>';
+  h+='<div class="hint">Mayor PIM del año · clic para abrir la ficha</div><div class="lista">';
+  P.slice().sort(function(a,b){return b.pimAnio-a.pimAnio;}).forEach(function(p){
+    h+='<button class="pitem" data-cui="'+p.cui+'"><span class="sw" style="background:'+(COL[p.programa]||COL.OTR)+'"></span><span><b>'+esc(p.corto)+'</b><small>'+esc(cap(p.dep))+' · PIM '+fmt(p.pimAnio)+' · '+fmtN(p.ejecAnio)+' %</small></span><span class="est" style="color:'+(p.ejecAnio>=50?'#1B5E20':p.ejecAnio>=25?'#C77700':'#B3261E')+'">'+fmtN(p.avFin)+' % fin.</span></button>';});
+  h+='</div>';
+  $('p-body').innerHTML=h;
+  $('p-body').querySelectorAll('.pitem').forEach(function(b){b.onclick=function(){seleccionar(b.dataset.cui);};});
+  $('p-body').querySelectorAll('.chip[data-prog]').forEach(function(b){b.onclick=function(){FILTRO.prog=b.dataset.prog;ir('cartera');};});
+}
+function panelProyecto(p){
+  $('p-tt').textContent=p.corto;$('p-ss').textContent='CUI '+p.cui+' · '+cap(p.dep)+(p.prov?' · '+cap(p.prov):'');
+  var h='<div style="font-size:11px;color:var(--ink2);line-height:1.4">'+esc(p.nombre)+'</div>';
+  h+='<div class="chips">'+tagProg(p.programa)+'<span class="chip">'+TIPO_ICO[p.tipo]+' '+esc(tipoNombre(p.tipo))+'</span>'+chipEst(p)+'</div>';
+  h+='<div class="stat"><div class="ic">🏗️</div><div><b>'+fmt(p.costo)+'</b><small>COSTO ACTUALIZADO (SSI)</small></div></div>';
+  h+='<div class="stat"><div class="ic">📈</div><div><b>'+fmt(p.devAcum)+'</b><small>DEVENGADO ACUMULADO · '+fmtN(p.avFin)+' %</small></div></div>';
+  h+='<div class="stat"><div class="ic">💰</div><div><b>'+fmt(p.devAnio)+'</b><small>DEVENGADO '+ANIO+' · '+fmtN(p.ejecAnio)+' % DEL PIM '+fmt(p.pimAnio)+'</small></div></div>';
+  h+='<div class="prog"><span>Avance físico</span><div class="bar"><i style="width:'+Math.min(100,p.avFisico||0)+'%;background:#00897B"></i></div><b>'+(p.avFisico!=null?fmtN(p.avFisico)+' %':'s/d')+'</b></div>';
+  h+='<div class="prog"><span>Avance financiero</span><div class="bar"><i style="width:'+Math.min(100,p.avFin||0)+'%"></i></div><b>'+fmtN(p.avFin)+' %</b></div>';
+  h+='<div class="acciones"><button class="cta" onclick="ir(\'ficha\')">📄 Abrir ficha completa</button><button onclick="abrirSSI()">🔗 Ficha SSI del MEF</button><button onclick="volverResumen()">← Volver al resumen</button></div>';
+  $('p-body').innerHTML=h;
+}
+window.volverResumen=function(){SEL=null;panelResumen();if(MAP)MAP.setView([-9.4,-75.2],5);};
+function seleccionar(cui){var p=byCui[cui];if(!p)return;SEL=cui;panelProyecto(p);
+  if(MAP&&p.lat!=null){MAP.flyTo([p.lat,p.lng],Math.max(MAP.getZoom(),8),{duration:.8});MARK[cui]&&MARK[cui].openTooltip();}
+  if(VISTA==='ficha')renderFicha();}
+window.seleccionar=seleccionar;
+
+/* ── buscador ── */
+var q=$('q'),sug=$('sug');
+function norm(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();}
+q.addEventListener('input',function(){var t=norm(q.value.trim());if(!t){sug.classList.remove('show');return;}
+  var r=P.filter(function(p){return norm(p.cui+' '+p.nombre+' '+p.corto+' '+p.dep+' '+progNombre(p.programa)+' '+tipoNombre(p.tipo)).indexOf(t)>=0;}).slice(0,12);
+  sug.innerHTML=r.length?r.map(function(p){return '<div class="it" role="option" data-cui="'+p.cui+'"><span class="k" style="background:'+(COL[p.programa]||COL.OTR)+'">'+p.cui+'</span><span><b>'+esc(p.corto)+'</b> · '+esc(cap(p.dep))+'</span></div>';}).join(''):'<div class="it">Sin resultados</div>';
+  sug.classList.add('show');
+  sug.querySelectorAll('.it[data-cui]').forEach(function(d){d.onclick=function(){q.value='';sug.classList.remove('show');seleccionar(d.dataset.cui);if(VISTA!=='mapa'&&VISTA!=='ficha')ir('ficha');};});});
+q.addEventListener('keydown',function(e){if(e.key==='Escape'){sug.classList.remove('show');q.blur();}if(e.key==='Enter'){var f=sug.querySelector('.it[data-cui]');if(f)f.click();}});
+document.addEventListener('click',function(e){if(!e.target.closest('.search'))sug.classList.remove('show');});
+document.addEventListener('keydown',function(e){if(e.key==='/'&&document.activeElement!==q){e.preventDefault();q.focus();}});
+
+/* ── cartera (tabla) ── */
+var FILTRO={prog:null,tipo:null,est:null},SORT={k:'pimAnio',d:-1};
+var COLS=[['cui','CUI'],['corto','Inversión'],['programa','Programa'],['tipo','Tipo'],['dep','Departamento'],['costo','Costo actualizado','n'],['devAcum','Devengado acumulado','n'],['avFin','Av. financ. %','n'],['avFisico','Av. físico %','n'],['pimAnio','PIM '+ANIO,'n'],['devAnio','Devengado '+ANIO,'n'],['ejecAnio','Ejec. '+ANIO+' %','n'],['estado','Estado']];
+function renderTabla(){
+  var rows=P.filter(function(p){return (!FILTRO.prog||p.programa===FILTRO.prog)&&(!FILTRO.tipo||p.tipo===FILTRO.tipo)&&(!FILTRO.est||(FILTRO.est==='A'?p.activo:!p.activo));});
+  rows.sort(function(a,b){var x=a[SORT.k],y=b[SORT.k];if(x==null)x=-Infinity;if(y==null)y=-Infinity;return (x>y?1:x<y?-1:0)*SORT.d;});
+  var t=$('tabla');t.querySelector('thead').innerHTML='<tr>'+COLS.map(function(c){return '<th class="'+(c[2]||'')+'" data-k="'+c[0]+'">'+c[1]+(SORT.k===c[0]?(SORT.d>0?' ▲':' ▼'):'')+'</th>';}).join('')+'</tr>';
+  t.querySelector('tbody').innerHTML=rows.map(function(p){return '<tr data-cui="'+p.cui+'" style="cursor:pointer">'+
+    '<td><b>'+p.cui+'</b></td><td><b>'+esc(p.corto)+'</b><br><small style="color:var(--mut)">'+esc(p.nombre.length>90?p.nombre.slice(0,90)+'…':p.nombre)+'</small></td>'+
+    '<td>'+tagProg(p.programa)+'</td><td>'+TIPO_ICO[p.tipo]+' '+esc(tipoNombre(p.tipo))+'</td><td>'+esc(cap(p.dep))+'</td>'+
+    '<td class="n">'+fmt(p.costo)+'</td><td class="n">'+fmt(p.devAcum)+'</td>'+
+    '<td class="n"><div class="bar" title="'+fmtN(p.avFin)+' %"><i style="width:'+Math.min(100,p.avFin)+'%"></i></div>'+fmtN(p.avFin)+'</td>'+
+    '<td class="n">'+(p.avFisico!=null?'<div class="bar"><i style="width:'+Math.min(100,p.avFisico)+'%;background:#00897B"></i></div>'+fmtN(p.avFisico):'<span style="color:var(--mut)">s/d</span>')+'</td>'+
+    '<td class="n">'+fmt(p.pimAnio)+'</td><td class="n">'+fmt(p.devAnio)+'</td><td class="n">'+fmtN(p.ejecAnio)+'</td><td>'+chipEst(p)+'</td></tr>';}).join('');
+  var tot=rows.reduce(function(s,p){s.c+=p.costo||0;s.d+=p.devAcum||0;s.pim+=p.pimAnio;s.dev+=p.devAnio;return s;},{c:0,d:0,pim:0,dev:0});
+  t.querySelector('tbody').innerHTML+='<tr style="font-weight:800;background:#F4F7FB"><td colspan="5">TOTAL · '+rows.length+' inversiones</td><td class="n">'+fmt(tot.c)+'</td><td class="n">'+fmt(tot.d)+'</td><td class="n">'+fmtN(pct(tot.d,tot.c))+'</td><td></td><td class="n">'+fmt(tot.pim)+'</td><td class="n">'+fmt(tot.dev)+'</td><td class="n">'+fmtN(pct(tot.dev,tot.pim))+'</td><td></td></tr>';
+  t.querySelectorAll('th').forEach(function(th){th.onclick=function(){var k=th.dataset.k;if(SORT.k===k)SORT.d*=-1;else{SORT.k=k;SORT.d=/costo|dev|pim|av|ejec/.test(k)?-1:1;}renderTabla();};});
+  t.querySelectorAll('tr[data-cui]').forEach(function(tr){tr.onclick=function(){seleccionar(tr.dataset.cui);ir('ficha');};});
+  $('cart-ss').textContent=rows.length+' de '+P.length+' inversiones · montos en soles, 2 decimales · corte '+(CORTE||'—');
+  var f='';
+  f+='<span class="chip'+(!FILTRO.prog?' on':'')+'" data-f="prog" data-v="">Todos</span>';
+  Object.keys(C.programas).forEach(function(k){f+='<span class="chip'+(FILTRO.prog===k?' on':'')+'" data-f="prog" data-v="'+k+'">'+esc(progNombre(k))+'</span>';});
+  f+='<span style="width:8px"></span>';
+  Object.keys(C.tipos).forEach(function(k){if(P.some(function(p){return p.tipo===k;}))f+='<span class="chip'+(FILTRO.tipo===k?' on':'')+'" data-f="tipo" data-v="'+k+'">'+TIPO_ICO[k]+' '+esc(tipoNombre(k))+'</span>';});
+  f+='<span style="width:8px"></span><span class="chip'+(FILTRO.est==='A'?' on':'')+'" data-f="est" data-v="A">Activas</span><span class="chip'+(FILTRO.est==='C'?' on':'')+'" data-f="est" data-v="C">Cerradas</span>';
+  $('cart-filtros').innerHTML=f;
+  $('cart-filtros').querySelectorAll('.chip').forEach(function(ch){ch.onclick=function(){var k=ch.dataset.f,v=ch.dataset.v||null;FILTRO[k]=(FILTRO[k]===v)?null:v;if(k==='prog'&&!v)FILTRO.tipo=FILTRO.est=null;renderTabla();};});
+}
+
+/* ── ejecución (gráficos) ── */
+var CH={};
+function destroy(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
+function anios(){var s={};Object.keys(C.hist||{}).forEach(function(a){s[a]=1;});Object.keys(C.histOtros||{}).forEach(function(a){s[a]=1;});s[ANIO]=1;return Object.keys(s).sort();}
+function renderCharts(){
+  if(!window.Chart){$('ejec-ss').textContent='Chart.js no disponible (sin acceso a cdnjs)';return;}
+  Chart.defaults.font.family='"Segoe UI",system-ui,sans-serif';Chart.defaults.font.size=11;Chart.defaults.color='#3C4A66';
+  var A=anios();
+  var pimC=A.map(function(a){return P.reduce(function(s,p){return s+((p.serie[a]||{}).pim||0);},0);});
+  var devC=A.map(function(a){return P.reduce(function(s,p){return s+((p.serie[a]||{}).dev||0);},0);});
+  var pimO=A.map(function(a){return (C.histOtros[a]||{}).pim||0;});
+  var devO=A.map(function(a){return (C.histOtros[a]||{}).dev||0;});
+  var tipM=function(ctx){return ctx.dataset.label+': '+fmt(ctx.parsed.y!=null&&ctx.chart.config.type!=='doughnut'?(ctx.chart.options.indexAxis==='y'?ctx.parsed.x:ctx.parsed.y):ctx.parsed);};
+  destroy('vida');CH.vida=new Chart($('ch-vida'),{type:'bar',data:{labels:A,datasets:[
+    {label:'PIM cartera vigente',data:pimC,backgroundColor:'#1565C0',stack:'pim'},
+    {label:'PIM otras inversiones de la UE',data:pimO,backgroundColor:'#9DB6DC',stack:'pim'},
+    {label:'Devengado cartera vigente',data:devC,backgroundColor:'#00897B',stack:'dev'},
+    {label:'Devengado otras inversiones',data:devO,backgroundColor:'#80CBC4',stack:'dev'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:tipM}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:function(v){return fmtM(v);}}}}}});
+  var progs=Object.keys(C.programas).filter(function(k){return P.some(function(p){return p.programa===k;});});
+  destroy('prog');CH.prog=new Chart($('ch-prog'),{type:'bar',data:{labels:progs.map(progNombre),datasets:[
+    {label:'Costo actualizado',data:progs.map(function(k){return P.filter(function(p){return p.programa===k;}).reduce(function(s,p){return s+(p.costo||0);},0);}),backgroundColor:'#BFD3F0'},
+    {label:'Devengado acumulado',data:progs.map(function(k){return P.filter(function(p){return p.programa===k;}).reduce(function(s,p){return s+(p.devAcum||0);},0);}),backgroundColor:progs.map(function(k){return COL[k];})}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:tipM}}},scales:{x:{ticks:{callback:function(v){return fmtM(v);}}}}}});
+  var deps={};P.forEach(function(p){var d=deps[p.dep]||(deps[p.dep]={pim:0,dev:0});d.pim+=p.pimAnio;d.dev+=p.devAnio;});
+  var dk=Object.keys(deps).sort(function(a,b){return deps[b].pim-deps[a].pim;});
+  destroy('dep');CH.dep=new Chart($('ch-dep'),{type:'bar',data:{labels:dk.map(cap),datasets:[{label:'PIM '+ANIO,data:dk.map(function(k){return deps[k].pim;}),backgroundColor:'#BFD3F0'},{label:'Devengado '+ANIO,data:dk.map(function(k){return deps[k].dev;}),backgroundColor:'#1565C0'}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:tipM}}},scales:{x:{ticks:{callback:function(v){return fmtM(v);}}}}}});
+  var tipos={};P.forEach(function(p){tipos[p.tipo]=(tipos[p.tipo]||0)+(p.costo||0);});var tk=Object.keys(tipos);
+  destroy('tipo');CH.tipo=new Chart($('ch-tipo'),{type:'doughnut',data:{labels:tk.map(tipoNombre),datasets:[{data:tk.map(function(k){return tipos[k];}),backgroundColor:['#1565C0','#00897B','#C77700','#6A1B9A','#B3261E','#455A64','#2E7D32']}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'},tooltip:{callbacks:{label:function(c){return c.label+': '+fmt(c.parsed);}}}}}});
+  var rk=P.filter(function(p){return p.pimAnio>0;}).sort(function(a,b){return b.ejecAnio-a.ejecAnio;});
+  destroy('rank');CH.rank=new Chart($('ch-rank'),{type:'bar',data:{labels:rk.map(function(p){return p.corto;}),datasets:[{label:'% devengado / PIM '+ANIO,data:rk.map(function(p){return p.ejecAnio;}),backgroundColor:rk.map(function(p){return p.ejecAnio>=50?'#2E7D32':p.ejecAnio>=25?'#C77700':'#B3261E';})}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){var p=rk[c.dataIndex];return fmtN(p.ejecAnio)+' % · '+fmt(p.devAnio)+' de '+fmt(p.pimAnio);}}}},scales:{x:{max:100,ticks:{callback:function(v){return v+' %';}}}},onClick:function(e,el){if(el.length){seleccionar(rk[el[0].index].cui);ir('ficha');}}}});
+  $('ejec-ss').textContent='PIM '+ANIO+' '+fmt(K.pim)+' · devengado '+fmt(K.dev)+' ('+fmtN(K.ejec)+' %) · histórico desde '+A[0]+' según Consulta Amigable';
+  $('ejec-anios').innerHTML='';
+}
+
+/* ── ficha ── */
+function renderFicha(){
+  var p=SEL&&byCui[SEL];var b=$('f-body');
+  if(!p){$('f-tt').textContent='Ficha';$('f-ss').textContent='Elige una inversión en el mapa, la cartera o el buscador';b.innerHTML='<div class="hint" style="padding:40px">Sin inversión seleccionada.</div>';$('f-ssi').hidden=$('f-f12b').hidden=true;return;}
+  $('f-tt').textContent=p.corto+' · CUI '+p.cui;$('f-ss').textContent=p.nombre;$('f-ssi').hidden=$('f-f12b').hidden=false;
+  var A=Object.keys(p.serie).sort();
+  var h='<div class="grid2">';
+  h+='<div class="card"><h3>Datos generales</h3><dl class="kv">'+
+    '<dt>Programa</dt><dd>'+tagProg(p.programa)+' <small style="color:var(--mut)">'+esc((C.programas[p.programa]||{}).detalle||'')+'</small></dd>'+
+    '<dt>Tipo de servicio</dt><dd>'+TIPO_ICO[p.tipo]+' '+esc(tipoNombre(p.tipo))+'</dd>'+
+    '<dt>Ubicación</dt><dd>'+esc(cap(p.dep))+(p.prov?' · '+esc(cap(p.prov)):'')+(p.dist?' · '+esc(cap(p.dist)):'')+'</dd>'+
+    '<dt>Estado (SSI)</dt><dd>'+chipEst(p)+' '+esc(p.situacion||'')+'</dd>'+
+    '<dt>Inicio · fin previsto</dt><dd>'+fecha(p.fechaInicio)+' · '+fecha(p.fechaFin)+'</dd>'+
+    '<dt>Costo actualizado</dt><dd><b>'+fmt(p.costo)+'</b></dd>'+
+    '<dt>Devengado acumulado</dt><dd><b>'+fmt(p.devAcum)+'</b> · '+fmtN(p.avFin)+' %</dd>'+
+    '<dt>Avance físico</dt><dd>'+(p.avFisico!=null?fmtN(p.avFisico)+' %':'sin registro F12-B')+'</dd>'+
+    '<dt>PIM · devengado '+ANIO+'</dt><dd>'+fmt(p.pimAnio)+' · '+fmt(p.devAnio)+' ('+fmtN(p.ejecAnio)+' %)</dd>'+
+    '<dt>Certificado · girado '+ANIO+'</dt><dd>'+fmt(p.certAnio)+' · '+fmt(p.girAnio)+'</dd></dl>';
+  if(p.uep&&Object.keys(p.uep).length>1){h+='<h3 style="margin-top:10px">Devengado por unidad ejecutora (SSI · sección IV)</h3><dl class="kv">'+Object.keys(p.uep).map(function(k){return '<dt>'+esc(k)+'</dt><dd>'+fmt(p.uep[k][0])+' <small style="color:var(--mut)">'+esc(p.uep[k][1])+'</small></dd>';}).join('')+'</dl>';}
+  h+='</div>';
+  h+='<div class="card" style="grid-column:1/3"><h3>Ejecución anual · PIM vs devengado (Consulta Amigable; '+ANIO+' en vivo)</h3><div class="cv"><canvas id="ch-f-anual"></canvas></div>'+
+    '<div style="overflow-x:auto;margin-top:8px"><table class="t"><thead><tr><th>Año</th><th class="n">PIA</th><th class="n">PIM</th><th class="n">Certificado</th><th class="n">Devengado</th><th class="n">Girado</th><th class="n">Ejec. %</th></tr></thead><tbody>'+
+    A.map(function(a){var s=p.serie[a];return '<tr><td>'+a+(s.vivo?' <small style="color:#2E7D32">● vivo</small>':'')+'</td><td class="n">'+fmt(s.pia)+'</td><td class="n">'+fmt(s.pim)+'</td><td class="n">'+fmt(s.cert)+'</td><td class="n">'+fmt(s.dev)+'</td><td class="n">'+fmt(s.gir)+'</td><td class="n">'+fmtN(pct(s.dev,s.pim))+'</td></tr>';}).join('')+
+    '<tr style="font-weight:800;background:#F4F7FB"><td>Total</td><td class="n"></td><td class="n">'+fmt(A.reduce(function(s,a){return s+p.serie[a].pim;},0))+'</td><td class="n"></td><td class="n">'+fmt(A.reduce(function(s,a){return s+p.serie[a].dev;},0))+'</td><td class="n">'+fmt(A.reduce(function(s,a){return s+p.serie[a].gir;},0))+'</td><td></td></tr></tbody></table></div></div>';
+  if(p.mensual&&Object.keys(p.mensual).length){h+='<div class="card"><h3>Devengado mensual '+ANIO+(p.mensualDet?' (Consulta Amigable)':' (SSI)')+'</h3><div class="cv"><canvas id="ch-f-mes"></canvas></div></div>';}
+  if(p.actividades&&Object.keys(p.actividades).length){var ak=Object.keys(p.actividades).sort(function(a,b){return p.actividades[b].pim-p.actividades[a].pim;});
+    h+='<div class="card" style="grid-column:1/3"><h3>Desglose '+ANIO+' por actividad / acción de inversión / obra (Consulta Amigable)</h3><div style="overflow-x:auto"><table class="t"><thead><tr><th>Código</th><th>Actividad</th><th class="n">PIM</th><th class="n">Certificado</th><th class="n">Devengado</th><th class="n">Girado</th><th class="n">Ejec. %</th></tr></thead><tbody>'+
+      ak.map(function(k){var a=p.actividades[k];return '<tr><td>'+esc(k)+'</td><td>'+esc(a.nombre)+'</td><td class="n">'+fmt(a.pim)+'</td><td class="n">'+fmt(a.cert)+'</td><td class="n">'+fmt(a.dev)+'</td><td class="n">'+fmt(a.gir)+'</td><td class="n">'+fmtN(pct(a.dev,a.pim))+'</td></tr>';}).join('')+'</tbody></table></div></div>';}
+  if(p.situActual){h+='<div class="card" style="grid-column:1/3"><h3>Situación actual declarada (Formato 12-B)</h3><div class="narr">'+esc(p.situActual)+'</div></div>';}
+  h+='<div class="card" style="grid-column:1/3"><h3>Ubicación</h3><div id="f-mapa" style="height:220px;border-radius:10px;overflow:hidden">'+(p.lat==null?'<div class="hint" style="padding:30px">Inversión de alcance nacional / sin punto geográfico</div>':'')+'</div></div>';
+  h+='</div>';
+  b.innerHTML=h;
+  if(window.Chart){destroy('fanual');CH.fanual=new Chart($('ch-f-anual'),{type:'bar',data:{labels:A,datasets:[{label:'PIM',data:A.map(function(a){return p.serie[a].pim;}),backgroundColor:'#BFD3F0'},{label:'Devengado',data:A.map(function(a){return p.serie[a].dev;}),backgroundColor:COL[p.programa]||COL.OTR}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.parsed.y);}}}},scales:{y:{ticks:{callback:function(v){return fmtM(v);}}}}}});
+    if(p.mensual&&$('ch-f-mes')){var M=Object.keys(p.mensual).sort(function(a,b){return a-b;});destroy('fmes');CH.fmes=new Chart($('ch-f-mes'),{type:'line',data:{labels:M.map(function(m){return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Set','Oct','Nov','Dic'][m-1]||m;}),datasets:[{label:'Devengado',data:M.map(function(m){return p.mensual[m];}),borderColor:COL[p.programa],backgroundColor:(COL[p.programa]||COL.OTR)+'33',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fmt(c.parsed.y);}}}},scales:{y:{ticks:{callback:function(v){return fmtM(v);}}}}}});}}
+  if(window.L&&p.lat!=null){var fm=L.map('f-mapa',{scrollWheelZoom:false}).setView([p.lat,p.lng],11);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(fm);L.circleMarker([p.lat,p.lng],{radius:10,color:'#fff',weight:2,fillColor:COL[p.programa]||COL.OTR,fillOpacity:.9}).addTo(fm).bindTooltip(p.corto,{permanent:true,direction:'top',offset:[0,-10]});setTimeout(function(){fm.invalidateSize();},80);}
+}
+
+/* ── exportar ── */
+function renderExp(){$('exp-fuentes').innerHTML='Corte de datos: <b>'+esc(CORTE||'—')+'</b>. Fuentes: '+(C.fuentes||[]).map(esc).join(' · ')+'. Los montos se exportan exactos, en soles, con dos decimales. La atribución por programa es referencial (config del panel), no un dato oficial del MEF.';}
+function loadScript(src,cb){var s=document.createElement('script');s.src=src;s.onload=cb;s.onerror=function(){alert('No se pudo cargar la librería de exportación ('+src+').');};document.head.appendChild(s);}
+window.exportarExcel=function(){var go=function(){var wb=new ExcelJS.Workbook();wb.creator='Panel de Inversiones';wb.created=new Date();
+  var ws=wb.addWorksheet('Cartera');var head=['CUI','Inversión','Nombre completo','Programa','Tipo','Departamento','Provincia','Distrito','Costo actualizado','Devengado acumulado','Avance financiero %','Avance físico %','PIM '+ANIO,'Certificado '+ANIO,'Devengado '+ANIO,'Girado '+ANIO,'Ejecución '+ANIO+' %','Estado','Inicio','Fin previsto'];
+  ws.addRow(head).font={bold:true};ws.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F1FB'}};
+  P.forEach(function(p){ws.addRow([p.cui,p.corto,p.nombre,progNombre(p.programa),tipoNombre(p.tipo),cap(p.dep),cap(p.prov),cap(p.dist),p.costo,p.devAcum,p.avFin,p.avFisico,p.pimAnio,p.certAnio,p.devAnio,p.girAnio,p.ejecAnio,p.activo?'ACTIVA':'CERRADA',p.fechaInicio||'',p.fechaFin||'']);});
+  [9,10,13,14,15,16].forEach(function(c){ws.getColumn(c).numFmt='#,##0.00';ws.getColumn(c).width=18;});[11,12,17].forEach(function(c){ws.getColumn(c).numFmt='0.00';});
+  ws.getColumn(2).width=30;ws.getColumn(3).width=60;ws.views=[{state:'frozen',ySplit:1}];
+  var wa=wb.addWorksheet('Anual');wa.addRow(['CUI','Inversión','Año','PIA','PIM','Certificado','Devengado','Girado','Ejecución %','Fuente']).font={bold:true};
+  P.forEach(function(p){Object.keys(p.serie).sort().forEach(function(a){var s=p.serie[a];wa.addRow([p.cui,p.corto,Number(a),s.pia,s.pim,s.cert,s.dev,s.gir,pct(s.dev,s.pim),s.vivo?'SSI (en vivo)':'Consulta Amigable']);});});
+  [4,5,6,7,8].forEach(function(c){wa.getColumn(c).numFmt='#,##0.00';wa.getColumn(c).width=18;});wa.getColumn(9).numFmt='0.00';
+  var wf=wb.addWorksheet('Fuentes');wf.addRow(['Corte',CORTE]);wf.addRow(['Fuentes',(C.fuentes||[]).join(' · ')]);wf.addRow(['Nota','Herramienta no oficial elaborada con información pública del MEF.']);
+  wb.xlsx.writeBuffer().then(function(buf){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download='Panel_Inversiones_Cartera_'+(CORTE||'').slice(0,10).replace(/-/g,'')+'.xlsx';a.click();});};
+  if(window.ExcelJS)go();else loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',go);};
+window.exportarPPT=function(){var go=function(){var pp=new PptxGenJS();pp.layout='LAYOUT_WIDE';var B='1565C0',T='0D2B5E',G='5B6B7F';
+  var sh=function(){return {type:'outer',blur:3,offset:2,angle:45,color:'000000',opacity:.25};};
+  var s=pp.addSlide();s.background={color:T};s.addText(marca,{x:.6,y:1.6,w:12,h:1,fontSize:36,bold:true,color:'FFFFFF'});
+  s.addText('Resumen ejecutivo de la cartera · Unidad Ejecutora '+(C.ue.ejecutora||'')+' · Sector Educación',{x:.6,y:2.6,w:12,h:.6,fontSize:18,color:'BFD3F0'});
+  s.addText('Corte '+CORTE+' · Herramienta no oficial elaborada con información pública del MEF',{x:.6,y:6.6,w:12,h:.4,fontSize:11,color:'9DB6DC'});
+  var k=pp.addSlide();k.addText('Indicadores de la cartera',{x:.5,y:.3,w:12,h:.6,fontSize:24,bold:true,color:T});
+  [['Inversiones en cartera',K.n+' ('+K.nAct+' activas)'],['Costo total',fmt(K.costo)],['Devengado acumulado',fmt(K.devAcum)+' ('+fmtN(K.avFin)+' %)'],['PIM '+ANIO,fmt(K.pim)],['Devengado '+ANIO,fmt(K.dev)+' ('+fmtN(K.ejec)+' %)']].forEach(function(kv,i){var x=.5+(i%3)*4.2,y=1.2+Math.floor(i/3)*2;k.addShape(pp.ShapeType.roundRect,{x:x,y:y,w:4,h:1.7,fill:{color:'F4F7FB'},line:{color:'DCE3EE'},rectRadius:.1,shadow:sh()});k.addText(kv[0].toUpperCase(),{x:x+.2,y:y+.15,w:3.6,h:.4,fontSize:10,bold:true,color:G});k.addText(kv[1],{x:x+.2,y:y+.6,w:3.6,h:.9,fontSize:18,bold:true,color:T});});
+  var t=pp.addSlide();t.addText('Cartera de inversiones · avance físico y financiero',{x:.5,y:.3,w:12,h:.6,fontSize:22,bold:true,color:T});
+  var rows=[['CUI','Inversión','Programa','Depto.','Costo actualizado','Dev. acumulado','Av. fin. %','Av. fís. %','PIM '+ANIO,'Ejec. '+ANIO+' %'].map(function(h){return {text:h,options:{bold:true,color:'FFFFFF',fill:{color:B},fontSize:9}};})];
+  P.slice().sort(function(a,b){return b.pimAnio-a.pimAnio;}).forEach(function(p){rows.push([p.cui,p.corto,progNombre(p.programa),cap(p.dep),fmtN(p.costo),fmtN(p.devAcum),fmtN(p.avFin),p.avFisico!=null?fmtN(p.avFisico):'s/d',fmtN(p.pimAnio),fmtN(p.ejecAnio)].map(function(v){return {text:String(v),options:{fontSize:8}};}));});
+  t.addTable(rows,{x:.4,y:1,w:12.5,colW:[.9,3.2,1.2,1.3,1.4,1.4,.8,.8,1.4,.8],border:{type:'solid',color:'DCE3EE',pt:.5},autoPage:true,autoPageRepeatHeader:true});
+  pp.writeFile({fileName:'Panel_Inversiones_Resumen_'+(CORTE||'').slice(0,10).replace(/-/g,'')+'.pptx'});};
+  if(window.PptxGenJS)go();else loadScript('pptxgen.bundle.js',go);};
+
+/* ── arranque ── */
+try{initMapa();}catch(e){console.error('mapa',e);}
+panelResumen();
+$('st').textContent=P.length?'Cartera cargada · corte '+(CORTE||'—'):'Sin datos de cartera';
+setTimeout(function(){$('splash').classList.add('go');},P.length?900:2500);
+window._panel={P:P,K:K,C:C,U:U,ANIO:ANIO};
+});
+</script>
+</body></html>
