@@ -1,4 +1,4 @@
-# Dashboard UE003 GICA — gica003.pe
+# Panel de Inversiones — UE 118
 # Buscadores tradicionales: bienvenidos
 User-agent: Googlebot
 Allow: /
